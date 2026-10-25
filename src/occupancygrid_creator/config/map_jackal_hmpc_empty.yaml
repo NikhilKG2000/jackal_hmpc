@@ -1,0 +1,26 @@
+occupancygrid_creator_node:
+  ros__parameters:
+    gridmap:
+      frequency: 1.0
+      map_id: "map"
+      size_x: 30.0
+      size_y: 30.0
+      resolution: 0.05
+      map_origin_x: 0.0
+      map_origin_y: 0.0
+      publish_topic: "/occupancy_grid"
+
+    obstacles:
+      inflate: false
+      inflation_thickness: 0.0
+
+      create_static:
+        use: false
+ 
+      receiving_position:
+        use: false
+
+    visualization:
+      marker_color: [0.7, 0.7, 0.7, 1.0]
+      marker_z: 0.2
+ 

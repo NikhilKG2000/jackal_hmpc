@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mpc_jackal</name>
+  <version>0.1.0</version>
+  <description>Jackal system interface for hierarchical MPC</description>
+
+  <maintainer email="nkrishnapurago@tudelft.nl">Nikhil</maintainer>
+  <author>Nikhil</author>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>eigen</depend>
+  <depend>boost</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>rcl_interfaces</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>mpc_base</depend>
+  <depend>mpc_core</depend>
+  <depend>mpc_modules</depend>
+  <depend>mpc_msgs</depend>
+  <depend>mpc_solver</depend>
+  <depend>mpc_tools</depend>
+  <depend>simple_sim</depend>
+
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>occupancygrid_creator</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

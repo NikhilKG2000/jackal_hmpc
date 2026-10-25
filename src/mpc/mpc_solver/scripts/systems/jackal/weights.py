@@ -1,0 +1,8 @@
+PMPC_WEIGHTS = {
+	"goal_xy_all": 40.0,
+	"goal_xy": 200.0,
+	"input_a": 16.0,
+	"input_omega": 16.0,
+	"input_a_terminal": 16.0,
+	"input_omega_terminal": 16.0,
+}

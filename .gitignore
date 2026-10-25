@@ -1,0 +1,24 @@
+# ROS 2
+/build/
+/install/
+/log/
+
+# Log files
+*.log
+*.log.*
+
+# Python
+__pycache__/
+*.pyc
+
+# MATLAB autosave files
+*.asv
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+
+# Editor
+.vscode/
+.idea/
+*.swp
