@@ -21,7 +21,7 @@ occupancygrid_creator_node:
 
         squares:
           x_center: [0.0, -1.5, 1.5]
-          y_center: [0.0, 0.2, -0.2]
+          y_center: [0.0, 0.0, -0.0]
           length: [9.98, 0.6, 0.6]
           width: [9.98, 1.2, 1.2]
           orientation_deg: [0.0, 30.0, 30.0]

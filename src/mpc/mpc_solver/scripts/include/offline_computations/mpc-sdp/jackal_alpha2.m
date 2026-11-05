@@ -137,7 +137,7 @@ function output = jackal_alpha2()
 
     for j = 1:5
         labels{2*j-1} = [names{j}, 'lower'];
-        lables{2*j} = [names{j}, 'upper'];
+        labels{2*j} = [names{j}, 'upper'];
     end
 
     fprintf('alpha2 (grid minimum): %.15g\n', alpha2);
@@ -167,7 +167,8 @@ function output = jackal_alpha2()
         'psi_bounds', psi_bounds, ...
         'psi_grid', psi_grid, ...
         'v_grid', v_grid, ...
-        'L', L);
+        'L', L, ...
+        'reference_v_intervals', reference_v_intervals);
 
     % Save the output variable
     save(fullfile(output_dir, 'alpha2_reference_dependent.mat'), 'output');

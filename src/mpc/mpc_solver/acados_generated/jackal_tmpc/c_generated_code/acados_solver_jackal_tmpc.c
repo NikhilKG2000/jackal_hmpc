@@ -433,7 +433,7 @@ void jackal_tmpc_acados_create_set_default_parameters(jackal_tmpc_solver_capsule
     // initialize parameters to nominal value
     double* p = calloc(NP, sizeof(double));
     p[4] = 0.000000000000000018503717077085938;
-    p[5] = 0.000000000000000059211894646675;
+    p[5] = 0.00000000000000003062684205862501;
     p[6] = 1;
     p[8] = 100;
     p[9] = 1;
