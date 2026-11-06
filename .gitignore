@@ -26,3 +26,7 @@ CMakeFiles/
 #Worklog
 /docs/
 
+
+# acados build products (CMake compiles the generated C itself)
+src/mpc/mpc_solver/acados_generated/**/*.o
+src/mpc/mpc_solver/acados_generated/**/*.so
