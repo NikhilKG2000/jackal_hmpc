@@ -12,6 +12,8 @@ def generate_launch_description():
     jackal_share = Path(get_package_share_directory("mpc_jackal"))
     sim_share = Path(get_package_share_directory("simple_sim"))
     map_share = Path(get_package_share_directory("occupancygrid_creator"))
+    description_share = Path(get_package_share_directory("jackal_description"))
+
 
     def include(path, arguments=None):
         return IncludeLaunchDescription(
@@ -41,6 +43,16 @@ def generate_launch_description():
     controllers = include(
         jackal_share / "launch" / "hmpc_simplesim.launch.py"
     )
+    
+    robot_description = include(
+        description_share / "launch" / "description.launch.py"
+    )
+
+    joint_states = Node(
+        package="joint_state_publisher",
+        executable="joint_state_publisher",
+        output="screen",
+    )
 
     rviz = Node(
         package="rviz2",
@@ -54,5 +66,5 @@ def generate_launch_description():
 
     return LaunchDescription(
         initial_state_arguments
-        + [occupancy_grid, simulator, controllers, rviz]
+        + [occupancy_grid, simulator, controllers, robot_description, joint_states, rviz]
     )
