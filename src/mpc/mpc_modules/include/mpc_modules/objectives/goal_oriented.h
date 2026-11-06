@@ -66,13 +66,9 @@ private:
 
     int x_position_;
     int y_position_;
-    //int z_position_;   Removed for ground robot
-    //int yaw_position_; Removed for ground robot
 
     int goal_x_position_;
     int goal_y_position_;
-    //int goal_z_position_;   Removed for ground robot
-    //int goal_yaw_position_; Removed for ground robot
 
     bool received_goal_ = false;
     bool first_check_ = true;

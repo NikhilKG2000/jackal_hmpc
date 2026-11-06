@@ -55,63 +55,6 @@ class ConstraintManager:
 
 
 # Constraints used in robust MPC to tighten system constraints
-'''
-class TightenedSystemConstraints:
-    def __init__(self, nvar, offline_comp):
-        self.K_delta = offline_comp.get_K_delta()
-        self.c_s = offline_comp.get_c_s()
-        self.alpha = offline_comp.get_alpha()
-
-        self.nh = 2 * nvar
-
-    def add_parameters(self):
-        # Nothing to do here, since it uses the parameter inserted by RobustTightening module
-        pass
-
-    def append_lower_bound(self, lower_bound):
-        for constraint in range(self.nh):
-            lower_bound.append(-np.inf)
-
-    def append_upper_bound(self, upper_bound):
-        for constraint in range(self.nh):
-            upper_bound.append(0.0)
-
-    def append_constraints(self, constraints, z, settings):
-        # Retrieving tube size
-
-        # Compute system input using linear feedback law K_delta
-        u = z[0:settings.model.nu]
-        nu = settings.model.nu
-
-        if settings.model_options["use_slack"]:
-            u = u[:-1]
-            nu = nu - 1
-        x = z[settings.model.nu:settings.model.nu+settings.model.nx]
-        if settings.model_options["use_input_rates"]:
-            u[:-1] = u[:-1] + x[-3:]
-            x = x[:-3]
-
-
-        # Define constraints lb <= your_constraint <= ub, with lb and ub lower and upper bounds
-        # Tightened input constraints
-        for u_idx, u_name in enumerate(settings.model.inputs):
-            if settings.model_options["use_slack"] and u_name == "slack":
-                continue
-
-            lb = settings.robot.lower_bound[u_name]
-            ub = settings.robot.upper_bound[u_name]
-            constraints.append(-u[u_idx] + lb + self.c_s[2*u_idx] * self.alpha)
-            constraints.append(u[u_idx] - ub + self.c_s[2*u_idx+1] * self.alpha)
-        
-        # Tightened state constraints
-        for x_idx, x_name in enumerate(settings.model.states):
-            if settings.model_options["use_input_rates"] and x_idx >= settings.model.nx - 3:
-                continue
-            lb = settings.robot.lower_bound[x_name]
-            ub = settings.robot.upper_bound[x_name]
-            constraints.append(-x[x_idx] + lb + self.c_s[2*(nu+x_idx)] * self.alpha)
-            constraints.append(x[x_idx] - ub + self.c_s[2*(nu+x_idx)+1] * self.alpha)
-'''
 
 class TightenedSystemConstraints:
     def __init__(self, nvar, offline_comp):
@@ -146,56 +89,10 @@ class TightenedSystemConstraints:
 
             lower_margin = self.c_s[2 * idx] * self.alpha
             upper_margin = self.c_s[2 * idx + 1] * self.alpha
-            '''
-            # Experimental exception: permit zero forward speed.
-            if name == "v": 
-                lower_margin = 0.0
-            '''
+            
             constraints.append(lb - value + lower_margin)
             constraints.append(value - ub + upper_margin)
 
-'''
-class TerminalConstraintsSteadyState:
-    def __init__(self, use_slack=False):
-        self.nh = 12
-        self.use_slack = use_slack
-
-    # Define the runtime parameters
-    def add_parameters(self):
-        # Nothing to do here
-        pass
-
-    def append_lower_bound(self, lower_bound):
-        for constraint in range(self.nh):
-            lower_bound.append(-np.inf)
-
-    def append_upper_bound(self, upper_bound):
-        for constraint in range(self.nh):
-            upper_bound.append(0.0)
-
-    def append_constraints(self, constraints, z, settings):
-        # Obtain slack if desired
-        if settings.model_options["use_slack"]:
-            slack = z[settings.model.nu - 1]
-        else:
-            slack = 1e-7  # lower than the solver tolerances
-
-        # Obtain terminal states
-        vx = z[settings.model.get_idx('vx')]
-        vy = z[settings.model.get_idx('vy')]
-        vz = z[settings.model.get_idx('vz')]
-        phi = z[settings.model.get_idx('phi')]
-        theta = z[settings.model.get_idx('theta')]
-        zero_states = [vx, vy, vz, phi, theta]
-        thrust = z[settings.model.get_idx('thrust')]
-
-        # Add terminal constraints with slack if desired
-        for state in zero_states:
-            constraints.append(state - slack)
-            constraints.append(-state - slack)
-        constraints.append(thrust - 9.81 - slack)
-        constraints.append(-(thrust - 9.81) - slack)
-'''
 
 class TerminalConstraintsSteadyState:
     def __init__(self, use_slack=False):
@@ -220,64 +117,6 @@ class TerminalConstraintsSteadyState:
             settings.model.get_input(z, "omega", True),
         ])
 
-"""
-These equalities implement your PMPC terminal condition:
-
-v_T=0,  a_T=0,  omega_T=0
-
-For the Jackal dynamics, these conditions imply f(x_T,u_T)=0. They leave terminal position and heading free, 
-as required by your formulation.
-There is an acados detail we must handle later: its terminal node has no ordinary control variable. 
-Since this model’s steady-state terminal input is necessarily [0, 0], the generator can supply that 
-input explicitly and export only the remaining v = 0 equality. It must omit the resulting constant-zero input rows. 
-This constraint class defines the complete mathematical condition.
-"""
-
-'''
-class TerminalConstraintsSet:
-    def __init__(self, offline_comp, use_slack=False):
-        self.nh = 1
-        self.alpha = offline_comp.get_alpha()
-        self.P = offline_comp.get_P_delta()
-        self.use_slack = use_slack
-
-    # Define the runtime parameters
-    def add_parameters(self):
-        # Nothing to do here
-        pass
-
-    def append_lower_bound(self, lower_bound):
-        for constraint in range(self.nh):
-            lower_bound.append(-np.inf)
-
-    def append_upper_bound(self, upper_bound):
-        for constraint in range(self.nh):
-            upper_bound.append(0.0)
-
-    def append_constraints(self, constraints, z, settings):      
-        # Obtain runtime states
-        #Only for 3D
-        x_idx = settings.model.get_idx('x')
-        x = z[x_idx:x_idx+settings.model.nx]
-        u = z[0:settings.model.nu]
-
-        if settings.model_options["use_slack"]:
-            slack = u[-1]
-
-        # Compute error with respect to reference trajectory
-        x_error = []
-        for i in range(settings.model.nx):
-            u_x_ref_idx = x_idx + i
-            if settings.model_options["use_slack"]:
-                u_x_ref_idx = u_x_ref_idx - 1
-            x_error.append((x[i] - getattr(settings.params, "u_x_ref_" + str(u_x_ref_idx))))
-        x_error = np.array(x_error)
-
-        if self.use_slack:
-            constraints.append(x_error.T @ self.P @ x_error - self.alpha ** 2 - slack)
-        else:
-            constraints.append(x_error.T @ self.P @ x_error - self.alpha ** 2)
-'''
 
 class TerminalConstraintsSet:
     def __init__(self, offline_comp, use_slack = False):
@@ -298,16 +137,6 @@ class TerminalConstraintsSet:
 
     def append_constraints(self, constraints, z, settings):
         constraints.append(objective.terminal_tracking_error(z, settings)-self.alpha**2)
-
-    """
-    This retains the TMPC terminal ellipsoid:
-    (x_T-x_T^r)^T * P * (x_T-x_T^r) <= alpha^2
-    The reference offset is now explicitly nu + idx, matching the six reference parameters above. 
-    The same heading-error convention is used in both the objective and terminal constraint.
-
-    The shape check prevents accidentally passing the quadrotor’s 10x10 matrix. 
-    It does not establish that a proposed 4x4 matrix is a valid Jackal terminal design.
-    """
 
 
 # Removed "Reuse constraints" because you can now define the parameters by name

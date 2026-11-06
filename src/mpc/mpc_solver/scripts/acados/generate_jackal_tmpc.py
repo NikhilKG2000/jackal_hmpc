@@ -129,8 +129,6 @@ def create_ocp(output_directory: Path) -> AcadosOcp:
 
     # x0 is overwritten on every controller iteration by the C++ adapter.
     x0 = np.zeros(NX)
-    #x0[2] = 1.0             # changed for jackal
-    #x0[9] = 9.81
     ocp.constraints.x0 = x0
 
     # Use the original module manager's stage allocation and bounds.

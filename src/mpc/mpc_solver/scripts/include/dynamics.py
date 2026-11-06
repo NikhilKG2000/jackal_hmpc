@@ -8,11 +8,7 @@ import numpy as np
 def solve_rk4(continuous_model, x, u, param, settings):
     dt = settings.integrator_options['stepsize']
     n_steps = settings.integrator_options['steps']
-    if settings.integrator_options['use_dt_feedback_law']:
-        v = u - settings.offline_comp.get_K_delta() @ x
     for i in range(n_steps):
-        if settings.integrator_options['use_dt_feedback_law']:
-            u = v + settings.offline_comp.get_K_delta() @ x
         x = rk4_step(continuous_model, x, u, param, settings, dt)
     return u, x
 
@@ -23,17 +19,10 @@ def rk4_step(continuous_model, x, u, param, settings, dt):
     k4 = continuous_model(x + dt * k3, u, param, settings)
     return x + dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6
 
-"""
-def add_dual(model, nh):
-    model.nu += nh
-    model.continuous_model = lambda x, u, param, settings: casadi.vstack(model.continuous_model(x, u, param, settings), np.zeros((nh, 1)))  # lambdas have no dynamics
-"""   
-
-
 # Dynamics, i.e. equality constraints #
 # This class contains models to choose from
 # They can be coupled with physical limits using Systems defined in systems.py
-# See Bicycle model for an example of the required parameters
+# See JackalModel for an example of the required parameters
 class DynamicModel:
 
     def __init__(self, system):
@@ -140,135 +129,3 @@ class JackalModel(DynamicModel):
         _, next_x = solve_rk4(self.continuous_model, x, u, param, settings,)
 
         return next_x
-
-
-'''
-class DroneModel(DynamicModel):
-
-    def __init__(self, system, options, offline_comp=None):
-        # Check whether model should be nonlinear and whether yaw component should be included or not
-        self.nonlin = options['nonlin']
-        self.with_yaw = options['with_yaw']
-        # Physical notion is used to generate state and input reference from higher-layer MPCC to lower-layer RMPC
-        self.physical_only = options['physical_only']
-        self.use_input_rates = options['use_input_rates']
-        self.use_slack = options['use_slack']
-        self.use_ct_feedback_law = options['use_ct_feedback_law']
-
-        # Physical states include all system states, except virtual states used for path following
-        # They should always come first in the states list!
-        if self.use_input_rates:
-            self.states = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'phi', 'theta', 'psi', 'thrust', 'phi_c', 'theta_c', 'psi_c']
-            self.states_from_sensor = [True, True, True, True, True, True, True, True, True, True, True, True, False, False,False, False, False, False]
-            self.states_from_sensor_at_infeasible = [True, True, True, True, True, True, True, True, True, True, True, True, False, False,False, False, False, False]
-            self.inputs = ['delta_phi_c', 'delta_theta_c', 'delta_psi_c', 'thrust_c']
-            self.possible_inputs_to_vehicle = self.inputs
-        else:
-            self.states = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'phi', 'theta', 'psi', 'thrust']
-            self.states_from_sensor = [True, True, True, True, True, True, True, True, True, False, False,]
-            self.states_from_sensor_at_infeasible = [True, True, True, True, True, True, True, True, True, False, False,]
-            self.inputs = ['phi_c', 'theta_c', 'psi_c', 'thrust_c']
-            self.possible_inputs_to_vehicle = self.inputs
-
-        if self.use_slack:
-            self.inputs.append('slack')
-
-        if self.use_ct_feedback_law:
-            self.K_delta = offline_comp.get_K_delta()
-
-        self.nu = len(self.inputs)
-        self.nu_physical = len(self.inputs)
-        self.nx = len(self.states)
-        self.nx_physical = len(self.states)
-        super(DroneModel, self).__init__(system)
-
-    def discretize_dynamics(self, z, param, settings):
-
-        # When using input rates in planner: adjust inputs and states for discretization with feedback law
-        u = [None] * self.nu
-        u[0] = settings.model.get_z_index(z, 'phi_c', True)
-        u[1] = settings.model.get_z_index(z, 'theta_c', True)
-        u[2] = settings.model.get_z_index(z, 'psi_c', True)
-        u[3] = settings.model.get_z_index(z, 'thrust_c', True)
-        x = z[self.nu:self.nu+self.nx]
-        x = list(x[i] for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
-        if self.use_input_rates:
-            # Desired angle rates around body frames [rad]
-            delta_phi = settings.model.get_z_index(z, 'delta_phi_c', True)
-            delta_theta = settings.model.get_z_index(z, 'delta_theta_c', True)
-            delta_psi = settings.model.get_z_index(z, 'delta_psi_c', True)
-            u[0] = u[0] + delta_phi
-            u[1] = u[1] + delta_theta
-            u[2] = u[2] + delta_psi
-
-        result_u, result_x = solve_rk4(self.continuous_model, x, u, param, settings)
-
-        if self.use_input_rates:
-            #return np.array([result_x[0:9], result_u[0:3]])
-            return casadi.vertcat(
-                *result_x[0:10],
-                result_u[0],
-                result_u[1],
-                result_u[2],
-            )
-        else:
-            return result_x
-
-    def continuous_model(self, x, u, param, settings):
-        # if self.use_ct_feedback_law:
-        #     u = u + self.K_delta @ x
-
-         
-        vx = x[3]
-        vy = x[4]
-        vz = x[5]
-        phi = x[6]
-        theta = x[7]
-        psi = x[8]
-        thrust = x[9]
-
-        # Inputs
-        phi_c = u[0]
-        theta_c = u[1]
-        psi_c = u[2]
-        thrust_c = u[3]
-
-        # Identified constants
-        # Roll and pitch
-        A = -5.55
-        B = 5.55
-
-        # Yaw
-        A_yaw = -1.773
-        B_yaw = 1.773
-
-        # Thrust
-        A_average = -20
-        B_average = 20
-
-        # Constants
-        g = 9.81
-
-        # Calculate derivatives
-        dx = vx
-        dy = vy
-        dz = vz
-        if not self.nonlin:
-            dvx = g * theta
-            dvy = -g * phi
-            dvz = thrust
-        else:
-            dvx = thrust * (casadi.sin(phi) * casadi.sin(psi) + casadi.cos(phi) * casadi.sin(theta) * casadi.cos(psi))
-            dvy = thrust * (-casadi.sin(phi) * casadi.cos(psi) + casadi.cos(phi) * casadi.sin(theta) * casadi.sin(psi))
-            dvz = thrust * (casadi.cos(phi) * casadi.cos(theta)) - g
-        
-        dphi = A * phi + B * phi_c
-        dtheta = A * theta + B * theta_c
-        dpsi =  A_yaw * psi + B_yaw * psi_c
-        dthrust = A_average * thrust + B_average * thrust_c
-
-        return np.array([dx, dy, dz, dvx, dvy, dvz, dphi, dtheta, dpsi, dthrust])
-'''
-
-    

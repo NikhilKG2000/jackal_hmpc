@@ -81,12 +81,12 @@ public:
     void PublishVisualizations() override;
     void AddStaticData() override;
 
-    // Methods specific to drone interface
+    // Methods specific to the Jackal interface
     void StateCallback(
         nav_msgs::msg::Odometry::ConstSharedPtr msg);
     void ActuateBrake();
 
-    // Methods overriden by derived drone interface classes
+    // Hooks for derived interface classes
     virtual void OnStateCallback(const nav_msgs::msg::Odometry& msg);
     virtual void OnComputeActuation();
     virtual void OnActuate();

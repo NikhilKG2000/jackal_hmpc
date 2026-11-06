@@ -9,8 +9,6 @@ configuration  = "JackalGO"
 model_options = {
     "use_input_rates": False,
     "use_slack": False,
-    "use_ct_feedback_law": False,
-    "use_dt_feedback_law": False,
     "use_tightened_system_constraints": True,
     "use_tightened_obstacle_constraints": True,
     "use_terminal_steady_state_constraint": True,
@@ -29,8 +27,6 @@ n_discs = 1
 integrator_options = {
     "stepsize": 0.05,
     "steps": 10,
-    "use_ct_feedback_law": False,
-    "use_dt_feedback_law": False,
 }
 
 initialize_input_runtime = False

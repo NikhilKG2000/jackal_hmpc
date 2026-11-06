@@ -18,8 +18,6 @@ configuration = "JackalRMPC"
 model_options = {
     "use_input_rates": False,
     "use_slack": False,
-    "use_ct_feedback_law": False,
-    "use_dt_feedback_law": False,
     "use_terminal_set_constraint": True,
 }
 
@@ -42,8 +40,6 @@ n_discs = 1
 integrator_options = {
     "stepsize": 0.05,
     "steps": 1,
-    "use_ct_feedback_law": False,
-    "use_dt_feedback_law": False,
 }
 
 initialize_input_runtime = False

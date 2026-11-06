@@ -1,8 +1,5 @@
 #include "mpc_modules/objectives/goal_oriented.h"
 
-//#include <tf2/LinearMath/Matrix3x3.h>
-//#include <tf2/LinearMath/Quaternion.h>
-
 #include <mpc_tools/instrumentation_timer.h>
 #include <mpc_tools/printing.h>
 #include <functional>
@@ -42,20 +39,16 @@ GoalOriented::GoalOriented(
             rclcpp::QoS(1));
         goal_position_msg_.header.frame_id = ptr_config_->robot_target_frame_;
     }
-    // Modify for ground robot
+
     // Check the solver data positions needed for this module
     std::vector<int> indexes = ptr_solver_->returnDataPositionsState({"x","y"});
     x_position_ = indexes[0];
     y_position_ = indexes[1];
-    //z_position_ = indexes[2];
-    //yaw_position_ = indexes[3];
 
     // Check objective positions in solver
     indexes = ptr_solver_->returnDataPositionsObjective({"goal_x","goal_y"});
     goal_x_position_ = indexes[0];
     goal_y_position_ = indexes[1];
-    //goal_z_position_ = indexes[2];
-    //goal_yaw_position_ = indexes[3];
 
     // Initialize ROS visuals
     goal_position_marker_pub_.reset(new ROSMarkerPublisher(nh_, ptr_config_->goal_position_vis_topic_.c_str(), ptr_config_->robot_target_frame_, 1));
@@ -84,37 +77,6 @@ bool GoalOriented::ReadyForControl(const RealTimeData& data)
 
     return true;
 }
-//  Modify GoalOriented::Update for jackal robot
-/*
-void GoalOriented::Update(RealTimeData& data)
-{
-    PROFILE_AND_LOG_INFO("GoalOriented::Update()");
-
-    // WE can do here is goal reach publish true??
-    // Note: +1 is used, because stage_vars_ contains the variables of the previous run and we need the current initial state
-    if (!received_goal_ && first_check_)
-    {
-    stored_goal_.pose.position.x = ptr_solver_->stage_vars_(x_position_,1);
-    stored_goal_.pose.position.y = ptr_solver_->stage_vars_(y_position_,1);
-    stored_goal_.pose.position.z = ptr_solver_->stage_vars_(z_position_,1);
-
-    tf2::Quaternion q;
-    double yaw = ptr_solver_->stage_vars_(yaw_position_,1);
-    q.setRPY(0.0, 0.0, yaw);
-
-    stored_goal_.pose.orientation.x = q.x();
-    stored_goal_.pose.orientation.y = q.y();
-    stored_goal_.pose.orientation.z = q.z();
-    stored_goal_.pose.orientation.w = q.w();
-
-
-    first_check_ = false;
-    }
-}
-*/
-
-// New void GoalOriented for ground robot
-
 void GoalOriented::Update(RealTimeData& data)
 {
     PROFILE_AND_LOG_INFO("GoalOriented::Update()");
@@ -136,30 +98,6 @@ void GoalOriented::Update(RealTimeData& data)
         first_check_ = false;
     }
 }
-/*
-void GoalOriented::SetParameters(const RealTimeData& data)
-{
-    MPC_INFO("GoalOriented::SetParameters()");
-
-    tf2::Quaternion q(stored_goal_.pose.orientation.x,
-    stored_goal_.pose.orientation.y,
-    stored_goal_.pose.orientation.z,
-    stored_goal_.pose.orientation.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    for (int i = 0; i < ptr_solver_->nbar_; ++i)
-    {
-    ptr_solver_->par_objectives_(goal_x_position_,i) = stored_goal_.pose.position.x;
-    ptr_solver_->par_objectives_(goal_y_position_,i) = stored_goal_.pose.position.y;
-    ptr_solver_->par_objectives_(goal_z_position_,i) = stored_goal_.pose.position.z;
-    ptr_solver_->par_objectives_(goal_yaw_position_,i) = yaw;
-    }
-}
-*/
-
-// Modify GoalOriented::SetParameters for ground robot
 void GoalOriented::SetParameters(const RealTimeData& data)
 {
     MPC_INFO("GoalOriented::SetParameters()");
@@ -226,18 +164,7 @@ void GoalOriented::OnReset()
 {
     // Nothing to do here
 }
-/*
-void GoalOriented::GoalCallback(
-    const geometry_msgs::msg::PoseStamped::SharedPtr goal)
-{
-    PROFILE_AND_LOG_INFO("GoalOriented::GoalCallback");
-
-    stored_goal_ = *goal;
-    received_goal_ = true;
-}
-*/
-
-// Modify GoalOriented::GoalCallBack for ground robot
+// Only the planar goal position is used; height and orientation are reset
 void GoalOriented::GoalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr goal)
 {
     PROFILE_AND_LOG_INFO("GoalOriented::GoalCallback");
@@ -253,10 +180,3 @@ void GoalOriented::GoalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr
 
     received_goal_ = true;
 }
-
-/*
-Note: We retain PoseStamped for ROS compatibility. 
-Only its planar position enters the PMPC goal parameters; the stored pose uses zero height and an identity quaternion.
-The existing ObjectiveReached() returns false; 
-this batch does not introduce a new goal-completion tolerance or stopping rule.
-*/

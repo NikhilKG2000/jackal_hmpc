@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
       (arguments[1] != "mpc_0" && arguments[1] != "mpc_1"))
   {
     RCLCPP_ERROR(
-      rclcpp::get_logger("mpc_hovergames"),
+      rclcpp::get_logger("mpc_jackal"),
       "Expected one solver argument: mpc_0 (tracker) or mpc_1 (planner)");
     rclcpp::shutdown();
     return 1;

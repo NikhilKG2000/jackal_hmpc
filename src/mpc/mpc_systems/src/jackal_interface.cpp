@@ -31,7 +31,7 @@ JackalInterface::JackalInterface(
       ptr_module_handler_(
           dynamic_cast<ModuleHandler*>(ptr_module_handler))
 {
-    MPC_WARN_ALWAYS("Initializing hovergames drone interface");
+    MPC_WARN_ALWAYS("Initializing Jackal interface");
 
     // Indication whether first state is received
     first_state_received_ = false;
@@ -258,7 +258,7 @@ JackalInterface::JackalInterface(
         }
         else
         {
-            MPC_ERROR_STREAM("Hovergames drone interface initialization failed: n_states_to_constrain_ is" << n_states_to_constrain_ << ", but should be at least 2. Exiting");
+            MPC_ERROR_STREAM("Jackal interface initialization failed: n_states_to_constrain_ is" << n_states_to_constrain_ << ", but should be at least 2. Exiting");
             exit(1);
         }
         stored_inputs_ = Eigen::MatrixXd::Zero(nu_, n_stages_to_store_);
@@ -283,7 +283,7 @@ JackalInterface::JackalInterface(
     }
     else
     {
-        MPC_ERROR_STREAM("Hovergames drone interface initialization failed: unknown MPC layer index: " << ptr_config_->layer_idx_ << ". Exiting");
+        MPC_ERROR_STREAM("Jackal interface initialization failed: unknown MPC layer index: " << ptr_config_->layer_idx_ << ". Exiting");
         exit(1);
     }
 
@@ -330,7 +330,7 @@ JackalInterface::JackalInterface(
     predicted_positions_ground_marker_pub_.reset(new ROSMarkerPublisher(nh_, ptr_config_->predicted_positions_ground_vis_topic_.c_str(), ptr_config_->robot_target_frame_, 2*n_stages_-1));
     predicted_regions_marker_pub_.reset(new ROSMarkerPublisher(nh_, ptr_config_->predicted_regions_vis_topic_.c_str(), ptr_config_->robot_target_frame_, ptr_config_->region_indices_to_draw_.size()*n_stages_));
 
-    MPC_WARN_ALWAYS("Hovergames drone interface initialized");
+    MPC_WARN_ALWAYS("Jackal interface initialized");
 }
 
 void JackalInterface::AtControlLoopStart()
@@ -663,7 +663,7 @@ void JackalInterface::ActuateBrake()
 
 void JackalInterface::Reset()
 {
-    PROFILE_AND_LOG_WARN("Reset - not implemented for hovergames drone interface!");
+    PROFILE_AND_LOG_WARN("Reset - not implemented for the Jackal interface!");
 }
 
 // Callback methods
@@ -1475,29 +1475,3 @@ void JackalInterface::OnActuateBrake()
 
     command_pub_->publish(command);
 }
-
-/*
-void JackalInterface::OnActuateBrake()
-{
-    if (!command_pub_ ||
-        !ptr_config_->enable_output_ ||
-        !first_state_received_)
-    {
-        return;
-    }
-
-    const double measured_speed =
-        last_state_msg_.twist.twist.linear.x;
-
-    const double acceleration = std::max(
-        acceleration_lower_,
-        std::min(
-            acceleration_upper_,
-            -measured_speed / ptr_solver_->dt_));
-
-    std_msgs::msg::Float64MultiArray command;
-    command.data = {acceleration, 0.0};
-
-    command_pub_->publish(command);
-}
-*/
